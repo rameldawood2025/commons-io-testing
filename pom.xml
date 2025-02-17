@@ -15,7 +15,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
     <groupId>org.apache.commons</groupId>
     <artifactId>commons-parent</artifactId>
@@ -67,7 +69,6 @@ file comparators, endian transformation classes, and much more.
     </developer>
     <developer>
       <name>dIon Gillard</name>
-      <!-- Note: first name is correctly capitalised above -->
       <id>dion</id>
       <email>dion@apache.org</email>
       <organization />
@@ -281,10 +282,13 @@ file comparators, endian transformation classes, and much more.
     <checkstyle.plugin.version>2.17</checkstyle.plugin.version>
 
     <japicmp.skip>false</japicmp.skip>
+    <!-- Added PIT version property for mutation testing -->
+    <pitest.version>1.18.0</pitest.version>
   </properties>
 
   <build>
     <plugins>
+      <!-- Maven Jar Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
@@ -303,6 +307,7 @@ file comparators, endian transformation classes, and much more.
           </archive>
         </configuration>
       </plugin>
+      <!-- Maven Surefire Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -326,6 +331,7 @@ file comparators, endian transformation classes, and much more.
           </excludes>
         </configuration>
       </plugin>
+      <!-- Maven Assembly Plugin -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
@@ -336,6 +342,7 @@ file comparators, endian transformation classes, and much more.
           <tarLongFileMode>gnu</tarLongFileMode>
         </configuration>
       </plugin>
+      <!-- Maven Checkstyle Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -345,6 +352,7 @@ file comparators, endian transformation classes, and much more.
           <enableRulesSummary>false</enableRulesSummary>
         </configuration>
       </plugin>
+      <!-- Maven SCM Publish Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-scm-publish-plugin</artifactId>
@@ -354,10 +362,7 @@ file comparators, endian transformation classes, and much more.
           </ignorePathsToDelete>
         </configuration>
       </plugin>
-      <!--
-       Fix for https://bugs.openjdk.java.net/browse/JDK-8212233
-       which is addressed in maven-javadoc-plugin:3.1.0, see https://issues.apache.org/jira/browse/MJAVADOC-562
-      -->
+      <!-- Maven Javadoc Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -365,6 +370,73 @@ file comparators, endian transformation classes, and much more.
         <configuration>
           <source>7</source>
         </configuration>
+      </plugin>
+      <!-- PIT Mutation Testing Plugin -->
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>${pitest.version}</version>
+        <executions>
+          <execution>
+            <id>pit-report</id>
+            <phase>test</phase>
+            <goals>
+              <goal>mutationCoverage</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <targetClasses>
+            <param>org.apache.commons.io.input.*</param>
+            <param>org.apache.commons.io.output.*</param>
+          </targetClasses>
+          <mutators>
+            <mutator>CONDITIONALS_BOUNDARY</mutator>
+            <mutator>NEGATE_CONDITIONALS</mutator>
+          </mutators>
+        </configuration>
+      </plugin>
+      <!-- JaCoCo Maven Plugin for Coverage Checking -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.8</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>check</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <rule>
+                  <element>BUNDLE</element>
+                  <limits>
+                    <limit>
+                      <counter>LINE</counter>
+                      <value>COVEREDRATIO</value>
+                      <minimum>1.0</minimum>
+                    </limit>
+                  </limits>
+                </rule>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -419,11 +491,9 @@ file comparators, endian transformation classes, and much more.
                     <exec executable="svn">
                       <arg line="checkout --depth immediates ${commons.scmPubUrl} ${commons.scmPubCheckoutDirectory}" />
                     </exec>
-
                     <exec executable="svn">
                       <arg line="update --set-depth exclude ${commons.scmPubCheckoutDirectory}/javadocs" />
                     </exec>
-
                     <pathconvert pathsep=" " property="dirs">
                       <dirset dir="${commons.scmPubCheckoutDirectory}" includes="*" />
                     </pathconvert>
@@ -450,3 +520,4 @@ file comparators, endian transformation classes, and much more.
     </profile>
   </profiles>
 </project>
+
